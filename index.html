@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intensive Practice for JLPT N4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .kanji-character {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 900;
+        }
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-white flex items-center justify-center min-h-screen">
+
+    <div id="app-container" class="w-full max-w-lg mx-auto p-4 md:p-6">
+        <!-- Menu Container -->
+        <div id="menu-container" class="text-center">
+            <h1 class="text-4xl font-bold mb-2">Intensive Practice for JLPT N4</h1>
+            <p class="text-lg text-gray-400 mb-8">Choose your practice mode.</p>
+            <div class="space-y-4">
+                <button data-mode="meaning" class="menu-btn bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 px-6 rounded-lg w-full text-xl transition-all">Practice Kanji (Meanings)</button>
+                <button data-mode="reading" class="menu-btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg w-full text-xl transition-all">Practice Kanji (Readings)</button>
+                <button id="view-kanji-list-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-4 px-6 rounded-lg w-full text-xl transition-all">View Kanji List</button>
+            </div>
+        </div>
+
+        <!-- Kanji List Container -->
+        <div id="kanji-list-container" class="hidden">
+            <h1 class="text-3xl font-bold text-center mb-4">JLPT N4 Kanji List</h1>
+            <div class="mb-4">
+                <input type="text" id="kanji-search-input" class="w-full p-3 bg-gray-700 text-white rounded-lg" placeholder="Search Kanji, Reading, or Meaning...">
+            </div>
+            <div class="max-h-96 overflow-y-auto bg-gray-900 p-2 rounded-lg">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-700 sticky top-0">
+                        <tr>
+                            <th class="p-3">Kanji</th>
+                            <th class="p-3">Readings</th>
+                            <th class="p-3">Meanings</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kanji-table-body">
+                        <!-- Kanji rows will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="back-to-menu-from-list" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-all">Back to Menu</button>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="hidden relative">
+             <!-- Home Button -->
+            <button id="home-button" title="Return to Main Menu" class="absolute top-4 left-4 bg-gray-600 hover:bg-gray-500 text-white font-bold p-2 rounded-full h-10 w-10 flex items-center justify-center transition-all z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </button>
+            
+            <!-- Header Section -->
+            <header id="header" class="text-white text-center p-6 rounded-t-lg transition-all">
+                <p id="round-display" class="text-lg font-bold">Round 1</p>
+                <div id="kanji-question-container">
+                    <h1 id="kanji-display" class="kanji-character text-7xl md:text-8xl mb-2">漢</h1>
+                </div>
+            </header>
+    
+            <!-- Main Content -->
+            <main id="main-content" class="bg-gray-700 p-6 rounded-b-lg shadow-2xl">
+                <form id="answer-form">
+                    <label for="answer-input" id="question-prompt" class="block text-center text-xl text-gray-400 mb-4">Meaning</label>
+                    <input type="text" id="answer-input" name="answer" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full p-4 bg-gray-900 text-white text-2xl text-center rounded-lg border-2 border-transparent focus:border-blue-500 focus:outline-none transition-all" placeholder="Your Answer">
+                    <button type="submit" class="hidden"></button> 
+                </form>
+    
+                <!-- Feedback Section -->
+                <div id="feedback-section" class="hidden mt-4 text-center">
+                    <p id="feedback-text" class="text-2xl font-bold"></p>
+                    <p id="correct-answer" class="text-lg text-gray-400"></p>
+                    <!-- Explanation Box -->
+                    <div id="explanation-box" class="hidden mt-4 p-4 bg-gray-800 rounded-lg text-left">
+                        <h4 id="explanation-title" class="font-bold text-lg mb-2 text-cyan-400"></h4>
+                        <p id="explanation-text" class="text-gray-300"></p>
+                    </div>
+                    <button id="next-button" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg w-full transition-all">Next (Enter)</button>
+                </div>
+            </main>
+            
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-600 rounded-full h-2.5 mt-6">
+              <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Final Score Section -->
+        <div id="final-score-container" class="hidden text-center p-6 bg-gray-700 rounded-lg">
+             <h2 id="final-title" class="text-3xl font-bold mb-2">Round Complete!</h2>
+             <p class="text-xl mb-4">Your Score:</p>
+             <p id="final-score" class="text-5xl font-bold text-green-400 mb-6">0%</p>
+             <p id="score-summary" class="text-lg mb-6"></p>
+             <p id="pass-fail-message" class="hidden text-lg mb-6"></p>
+             <div class="space-y-4 mt-6">
+                <button id="next-round-button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg w-full transition-all">Next Round</button>
+                <button id="retry-round-button" class="hidden bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-8 rounded-lg w-full transition-all">Retry Round</button>
+                <button id="main-menu-button" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-lg w-full transition-all">Main Menu</button>
+             </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Data for the quiz
+            const n4Kanji = [
+                { kanji: '不', meaning: ['not', 'un-', 'non-'], reading: ['ふ', 'ぶ'], explanation: 'Prefix for negation. Ex: 不便 (fuben - inconvenient), 不安 (fuan - uneasy).' },
+                { kanji: '世', meaning: ['world', 'generation'], reading: ['せ', 'せい', 'よ'], explanation: 'World, society, or age. Ex: 世界 (sekai - world), 世話 (sewa - care).' },
+                { kanji: '主', meaning: ['main', 'master'], reading: ['しゅ', 'ぬし', 'おも'], explanation: 'Main or master/owner. Ex: 主人 (shujin - master/husband), 主に (omoni - mainly).' },
+                { kanji: '乗', meaning: ['ride'], reading: ['のる', 'じょう'], explanation: 'To ride a vehicle. Ex: 乗る (noru - to ride), 電車に乗る (densha ni noru - to ride a train).' },
+                { kanji: '事', meaning: ['thing', 'matter'], reading: ['こと', 'じ'], explanation: 'An abstract thing or event. Ex: 食事 (shokuji - meal), 大事 (daiji - important).' },
+                { kanji: '京', meaning: ['capital'], reading: ['きょう', 'けい'], explanation: 'Capital city. Ex: 東京 (Tōkyō), 京都 (Kyōto).' },
+                { kanji: '仕', meaning: ['serve', 'do'], reading: ['し', 'つかえる'], explanation: 'Often related to work or service. Ex: 仕事 (shigoto - work), 仕方 (shikata - method).' },
+                { kanji: '代', meaning: ['substitute', 'generation', 'age'], reading: ['だい', 'かわり'], explanation: 'To substitute or represent an era. Ex: 代わり (kawari - substitute), 時代 (jidai - era/period).' },
+                { kanji: '以', meaning: ['by means of', 'more than'], reading: ['い'], explanation: 'Used in compounds. Ex: 以上 (ijō - more than/above), 以下 (ika - less than/below).' },
+                { kanji: '低', meaning: ['low'], reading: ['ひくい', 'てい'], explanation: 'Low in height or rank. Ex: 低い (hikui - low), 最低 (saitei - the lowest/worst).' },
+                { kanji: '住', meaning: ['live', 'reside'], reading: ['すむ', 'じゅう'], explanation: 'To live or reside. Ex: 住む (sumu - to live), 住所 (jūsho - address).' },
+                { kanji: '体', meaning: ['body'], reading: ['からだ', 'たい'], explanation: 'The physical body. Ex: 体 (karada - body), 体重 (taijū - body weight).' },
+                { kanji: '作', meaning: ['make'], reading: ['つくる', 'さく'], explanation: 'To make or create. Ex: 作る (tsukuru - to make), 作品 (sakuhin - a work/piece).' },
+                { kanji: '使', meaning: ['use', 'employ'], reading: ['つかう', 'し'], explanation: 'To use something. Ex: 使う (tsukau - to use), 大使館 (taishikan - embassy).' },
+                { kanji: '便', meaning: ['convenient', 'mail'], reading: ['べん', 'びん'], explanation: 'Convenience or post. Ex: 便利 (benri - convenient), 郵便局 (yūbinkyoku - post office).' },
+                { kanji: '借', meaning: ['borrow'], reading: ['かりる', 'しゃく'], explanation: 'To borrow something. Ex: 借りる (kariru - to borrow), 借金 (shakkin - debt).' },
+                { kanji: '働', meaning: ['work'], reading: ['はたらく', 'どう'], explanation: 'To work. Ex: 働く (hataraku - to work), 労働 (rōdō - labor).' },
+                { kanji: '元', meaning: ['origin', 'former'], reading: ['もと', 'げん', 'がん'], explanation: 'Origin or beginning. Ex: 元気 (genki - healthy/energetic), 元 (moto - origin).' },
+                { kanji: '兄', meaning: ['older brother'], reading: ['あに', 'きょう', 'けい'], explanation: 'Older brother. Ex: 兄 (ani - my older brother), 兄弟 (kyōdai - siblings).' },
+                { kanji: '光', meaning: ['light', 'shine'], reading: ['ひかり', 'こう'], explanation: 'Light. Ex: 光 (hikari - light), 観光 (kankō - sightseeing).' },
+                { kanji: '写', meaning: ['copy', 'photograph'], reading: ['うつす', 'しゃ'], explanation: 'To copy or photograph. Ex: 写真 (shashin - photograph), 写す (utsusu - to copy).' },
+                { kanji: '冬', meaning: ['winter'], reading: ['ふゆ', 'とう'], explanation: 'The season of winter. Ex: 冬 (fuyu - winter).' },
+                { kanji: '切', meaning: ['cut'], reading: ['きる', 'せつ', 'さい'], explanation: 'To cut. Ex: 切る (kiru - to cut), 大切 (taisetsu - important).' },
+                { kanji: '別', meaning: ['separate'], reading: ['べつ', 'わかれる'], explanation: 'To separate or another. Ex: 別れる (wakareru - to separate), 別々 (betsubetsu - separately).' },
+                { kanji: '力', meaning: ['power', 'strength'], reading: ['ちから', 'りょく', 'りき'], explanation: 'Power, force, or strength. Ex: 力 (chikara - power), 協力 (kyōryoku - cooperation).' },
+                { kanji: '勉', meaning: ['strive', 'endeavor'], reading: ['べん'], explanation: 'Part of "to study". Ex: 勉強 (benkyō - study).' },
+                { kanji: '動', meaning: ['move'], reading: ['うごく', 'どう'], explanation: 'To move. Ex: 動く (ugoku - to move), 動物 (dōbutsu - animal).' },
+                { kanji: '区', meaning: ['ward', 'district'], reading: ['く'], explanation: 'A district or ward of a city. Ex: 区役所 (kuyakusho - ward office).' },
+                { kanji: '医', meaning: ['doctor', 'medicine'], reading: ['い'], explanation: 'Related to medicine or doctors. Ex: 医者 (isha - doctor), 医院 (iin - clinic).' },
+                { kanji: '去', meaning: ['go away', 'leave'], reading: ['さる', 'きょ', 'こ'], explanation: 'To leave or pass. Ex: 去年 (kyonen - last year), 過去 (kako - the past).' },
+                { kanji: '台', meaning: ['stand', 'platform'], reading: ['だい', 'たい'], explanation: 'A stand or base; counter for machines. Ex: 台所 (daidokoro - kitchen), 一台 (ichidai - one machine).' },
+                { kanji: '合', meaning: ['fit', 'join'], reading: ['あう', 'ごう', 'かっ'], explanation: 'To fit or match. Ex: 間に合う (maniau - to be on time), 場合 (baai - case, situation).' },
+                { kanji: '同', meaning: ['same', 'agree'], reading: ['おなじ', 'どう'], explanation: 'Indicates sameness or agreement. Ex: 同じ (onaji - same), 同時 (dōji - at the same time).' },
+                { kanji: '味', meaning: ['taste'], reading: ['あじ', 'み'], explanation: 'Taste or flavor. Ex: 味 (aji - taste), 意味 (imi - meaning).' },
+                { kanji: '品', meaning: ['goods', 'article'], reading: ['しな', 'ひん'], explanation: 'Refers to goods or products. Ex: 品物 (shinamono - goods), 商品 (shōhin - product).' },
+                { kanji: '員', meaning: ['member'], reading: ['いん'], explanation: 'A member of a group. Ex: 会社員 (kaishain - company employee), 店員 (ten-in - shop assistant).' },
+                { kanji: '問', meaning: ['question', 'ask'], reading: ['とう', 'もん'], explanation: 'To ask or inquire. Ex: 質問 (shitsumon - question), 問題 (mondai - problem).' },
+                { kanji: '回', meaning: ['turn', 'times'], reading: ['まわす', 'かい'], explanation: 'To turn, or a counter for times. Ex: 一回 (ikkai - one time), 回す (mawasu - to turn).' },
+                { kanji: '図', meaning: ['drawing', 'map'], reading: ['ず', 'と', 'はかる'], explanation: 'A diagram, drawing, or map. Ex: 図書館 (toshokan - library), 合図 (aizu - sign, signal).' },
+                { kanji: '地', meaning: ['ground', 'earth'], reading: ['ち', 'じ'], explanation: 'Refers to the ground or a location. Ex: 地図 (chizu - map), 地下鉄 (chikatetsu - subway).' },
+                { kanji: '堂', meaning: ['hall'], reading: ['どう'], explanation: 'A public hall or temple. Ex: 食堂 (shokudō - cafeteria), 講堂 (kōdō - auditorium).' },
+                { kanji: '場', meaning: ['place'], reading: ['ば', 'じょう'], explanation: 'A location or place. Ex: 場所 (basho - place), 工場 (kōjō - factory).' },
+                { kanji: '声', meaning: ['voice'], reading: ['こえ', 'せい'], explanation: 'Voice. Ex: 声 (koe - voice).' },
+                { kanji: '売', meaning: ['sell'], reading: ['うる', 'ばい'], explanation: 'The act of selling. Ex: 売る (uru - to sell), 売店 (baiten - shop, stall).' },
+                { kanji: '夏', meaning: ['summer'], reading: ['なつ', 'か', 'げ'], explanation: 'The season of summer. Ex: 夏 (natsu - summer), 夏休み (natsuyasumi - summer vacation).' },
+                { kanji: '夕', meaning: ['evening'], reading: ['ゆう'], explanation: 'Evening. Ex: 夕方 (yūgata - evening), 夕食 (yūshoku - dinner).' },
+                { kanji: '夜', meaning: ['night'], reading: ['よる', 'や'], explanation: 'Night. Ex: 夜 (yoru - night), 今夜 (kon-ya - tonight).' },
+                { kanji: '太', meaning: ['fat', 'thick'], reading: ['ふとい', 'た', 'たい'], explanation: 'Fat or thick. Ex: 太い (futoi - fat), 太陽 (taiyō - sun).' },
+                { kanji: '好', meaning: ['like', 'fond of'], reading: ['すき', 'このむ', 'こう'], explanation: 'To like something. Ex: 好き (suki - like), 好み (konomi - preference).' },
+                { kanji: '妹', meaning: ['younger sister'], reading: ['いもうと', 'まい'], explanation: 'Younger sister. Ex: 妹 (imōto - younger sister).' },
+                { kanji: '姉', meaning: ['older sister'], reading: ['あね', 'し'], explanation: 'Older sister. Ex: 姉 (ane - my older sister).' },
+                { kanji: '始', meaning: ['begin'], reading: ['はじまる', 'し'], explanation: 'To begin or start. Ex: 始まる (hajimaru - to begin), 開始 (kaishi - start).' },
+                { kanji: '字', meaning: ['character', 'letter'], reading: ['じ', 'あざ'], explanation: 'A character or letter. Ex: 漢字 (kanji), 文字 (moji - letter/character).' },
+                { kanji: '室', meaning: ['room'], reading: ['しつ', 'むろ'], explanation: 'A room. Ex: 教室 (kyōshitsu - classroom), 和室 (washitsu - Japanese-style room).' },
+                { kanji: '家', meaning: ['house', 'home'], reading: ['いえ', 'うち', 'か', 'け'], explanation: 'House or home. Ex: 家 (ie - house), 家族 (kazoku - family).' },
+                { kanji: '寒', meaning: ['cold'], reading: ['さむい', 'かん'], explanation: 'Cold (weather). Ex: 寒い (samui - cold).' },
+                { kanji: '屋', meaning: ['roof', 'shop'], reading: ['や', 'おく'], explanation: 'Roof or a shop. Ex: 本屋 (hon-ya - bookstore), 屋上 (okujō - rooftop).' },
+                { kanji: '工', meaning: ['craft', 'construction'], reading: ['こう', 'く'], explanation: 'Craft or industry. Ex: 工場 (kōjō - factory), 工事 (kōji - construction work).' },
+                { kanji: '市', meaning: ['city', 'market'], reading: ['し', 'いち'], explanation: 'City or market. Ex: 市役所 (shiyakusho - city hall), 市場 (ichiba - market).' },
+                { kanji: '帰', meaning: ['return'], reading: ['かえる', 'き'], explanation: 'To return to a place. Ex: 帰る (kaeru - to return), 帰国 (kikoku - return to one\'s country).' },
+                { kanji: '広', meaning: ['wide', 'spacious'], reading: ['ひろい', 'こう'], explanation: 'Describes a wide area. Ex: 広い (hiroi - wide), 広告 (kōkoku - advertisement).' },
+                { kanji: '度', meaning: ['degrees', 'time'], reading: ['ど', 'たび'], explanation: 'Degrees or number of times. Ex: 今度 (kondo - next time), 温度 (ondo - temperature).' },
+                { kanji: '建', meaning: ['build'], reading: ['たてる', 'けん'], explanation: 'To construct or build something. Ex: 建てる (tateru - to build), 建物 (tatemono - building).' },
+                { kanji: '引', meaning: ['pull'], reading: ['ひく', 'いん'], explanation: 'To pull. Ex: 引く (hiku - to pull), 引き出し (hikidashi - drawer).' },
+                { kanji: '弟', meaning: ['younger brother'], reading: ['おとうと', 'てい', 'だい'], explanation: 'Younger brother. Ex: 弟 (otōto - younger brother), 兄弟 (kyōdai - siblings).' },
+                { kanji: '弱', meaning: ['weak'], reading: ['よわい', 'じゃく'], explanation: 'Weak. Ex: 弱い (yowai - weak).' },
+                { kanji: '強', meaning: ['strong'], reading: ['つよい', 'きょう', 'ごう'], explanation: 'Indicates strength. Ex: 強い (tsuyoi - strong), 勉強 (benkyō - study).' },
+                { kanji: '待', meaning: ['wait'], reading: ['まつ', 'たい'], explanation: 'To wait. Ex: 待つ (matsu - to wait), 招待 (shōtai - invitation).' },
+                { kanji: '心', meaning: ['heart', 'mind'], reading: ['こころ', 'しん'], explanation: 'Heart, mind, or spirit. Ex: 心 (kokoro - heart), 安心 (anshin - relief).' },
+                { kanji: '思', meaning: ['think'], reading: ['おもう', 'し'], explanation: 'To think or feel. Ex: 思う (omou - to think), 意思 (ishi - intention).' },
+                { kanji: '急', meaning: ['hurry', 'urgent'], reading: ['いそぐ', 'きゅう'], explanation: 'To hurry. Ex: 急ぐ (isogu - to hurry), 急に (kyū ni - suddenly).' },
+                { kanji: '悪', meaning: ['bad', 'evil'], reading: ['わるい', 'あく'], explanation: 'Bad or wrong. Ex: 悪い (warui - bad), 悪魔 (akuma - devil).' },
+                { kanji: '意', meaning: ['idea', 'mind'], reading: ['い'], explanation: 'Idea, mind, or meaning. Ex: 意味 (imi - meaning), 意見 (iken - opinion).' },
+                { kanji: '所', meaning: ['place'], reading: ['ところ', 'しょ'], explanation: 'Place or location. Ex: 場所 (basho - place), 台所 (daidokoro - kitchen).' },
+                { kanji: '持', meaning: ['hold', 'have'], reading: ['もつ', 'じ'], explanation: 'To hold or possess. Ex: 持つ (motsu - to hold), 気持ち (kimochi - feeling).' },
+                { kanji: '教', meaning: ['teach'], reading: ['おしえる', 'きょう'], explanation: 'To teach. Ex: 教える (oshieru - to teach), 教室 (kyōshitsu - classroom).' },
+                { kanji: '文', meaning: ['sentence', 'writing'], reading: ['ぶん', 'もん', 'ふみ'], explanation: 'Writing, sentence, or culture. Ex: 文学 (bungaku - literature), 文化 (bunka - culture).' },
+                { kanji: '料', meaning: ['fee', 'materials'], reading: ['りょう'], explanation: 'Fee or materials. Ex: 料金 (ryōkin - fee), 料理 (ryōri - cooking).' },
+                { kanji: '方', meaning: ['direction', 'way'], reading: ['かた', 'ほう'], explanation: 'Direction or way of doing something. Ex: あの方 (ano kata - that person [polite]), 方法 (hōhō - method).' },
+                { kanji: '旅', meaning: ['travel'], reading: ['たび', 'りょ'], explanation: 'Related to travel. Ex: 旅行 (ryokō - travel, trip), 旅館 (ryokan - Japanese inn).' },
+                { kanji: '族', meaning: ['family', 'tribe'], reading: ['ぞく'], explanation: 'Family or clan. Ex: 家族 (kazoku - family).' },
+                { kanji: '早', meaning: ['early'], reading: ['はやい', 'そう'], explanation: 'Early. Ex: 早い (hayai - early), 早速 (sassoku - immediately).' },
+                { kanji: '明', meaning: ['bright', 'light'], reading: ['あかるい', 'めい', 'みょう'], explanation: 'Bright or clear. Ex: 明るい (akarui - bright), 明日 (ashita/asu - tomorrow).' },
+                { kanji: '映', meaning: ['project', 'reflect'], reading: ['うつる', 'えい'], explanation: 'To reflect or project. Ex: 映画 (eiga - movie).' },
+                { kanji: '春', meaning: ['spring'], reading: ['はる', 'しゅん'], explanation: 'The season of spring. Ex: 春 (haru - spring).' },
+                { kanji: '昼', meaning: ['daytime', 'noon'], reading: ['ひる', 'ちゅう'], explanation: 'Noon or daytime. Ex: 昼 (hiru - daytime), 昼食 (chūshoku - lunch).' },
+                { kanji: '暑', meaning: ['hot'], reading: ['あつい', 'しょ'], explanation: 'Hot (weather). Ex: 暑い (atsui - hot).' },
+                { kanji: '暗', meaning: ['dark'], reading: ['くらい', 'あん'], explanation: 'Dark or gloomy. Ex: 暗い (kurai - dark), 暗記 (anki - memorization).' },
+                { kanji: '曜', meaning: ['day of the week'], reading: ['よう'], explanation: 'Used for days of the week. Ex: 月曜日 (getsuyōbi - Monday).' },
+                { kanji: '有', meaning: ['have', 'exist'], reading: ['ある', 'ゆう'], explanation: 'To have or exist. Ex: 有名 (yūmei - famous).' },
+                { kanji: '服', meaning: ['clothes'], reading: ['ふく'], explanation: 'Items of clothing. Ex: 服 (fuku - clothes), 洋服 (yōfuku - Western clothes).' },
+                { kanji: '朝', meaning: ['morning'], reading: ['あさ', 'ちょう'], explanation: 'Morning. Ex: 朝 (asa - morning), 今朝 (kesa - this morning).' },
+                { kanji: '村', meaning: ['village'], reading: ['むら', 'そん'], explanation: 'A village. Ex: 村 (mura - village).' },
+                { kanji: '林', meaning: ['woods'], reading: ['はやし', 'りん'], explanation: 'A small forest or woods. Ex: 林 (hayashi - woods).' },
+                { kanji: '森', meaning: ['forest'], reading: ['もり', 'しん'], explanation: 'A large forest. Ex: 森 (mori - forest).' },
+                { kanji: '業', meaning: ['business', 'vocation'], reading: ['ぎょう', 'わざ'], explanation: 'Business, industry, or karma. Ex: 授業 (jugyō - class), 産業 (sangyō - industry).' },
+                { kanji: '楽', meaning: ['fun', 'music'], reading: ['たのしい', 'がく', 'らく'], explanation: 'Fun or music. Ex: 楽しい (tanoshii - fun), 音楽 (ongaku - music).' },
+                { kanji: '歌', meaning: ['sing', 'song'], reading: ['うた', 'か'], explanation: 'To sing or a song. Ex: 歌う (utau - to sing), 歌手 (kashu - singer).' },
+                { kanji: '止', meaning: ['stop'], reading: ['とまる', 'し'], explanation: 'To stop. Ex: 止まる (tomaru - to stop), 中止 (chūshi - cancellation).' },
+                { kanji: '正', meaning: ['correct', 'justice'], reading: ['ただしい', 'せい', 'しょう'], explanation: 'Correct or right. Ex: 正しい (tadashii - correct), 正直 (shōjiki - honest).' },
+                { kanji: '歩', meaning: ['walk'], reading: ['あるく', 'ほ', 'ぶ'], explanation: 'To walk. Ex: 歩く (aruku - to walk), 散歩 (sanpo - a walk/stroll).' },
+                { kanji: '死', meaning: ['die', 'death'], reading: ['しぬ', 'し'], explanation: 'Related to death. Ex: 死ぬ (shinu - to die).' },
+                { kanji: '民', meaning: ['people', 'nation'], reading: ['たみ', 'みん'], explanation: 'People of a nation. Ex: 国民 (kokumin - citizen), 民主主義 (minshushugi - democracy).' },
+                { kanji: '池', meaning: ['pond'], reading: ['いけ', 'ち'], explanation: 'A pond. Ex: 池 (ike - pond).' },
+                { kanji: '注', meaning: ['pour', 'attention'], reading: ['そそぐ', 'ちゅう'], explanation: 'To pour or to pay attention. Ex: 注意 (chūi - caution/attention), 注文 (chūmon - order).' },
+                { kanji: '洋', meaning: ['ocean', 'western'], reading: ['よう'], explanation: 'Ocean or Western-style. Ex: 洋服 (yōfuku - western clothes), 大西洋 (taiseiyō - Atlantic Ocean).' },
+                { kanji: '洗', meaning: ['wash'], reading: ['あらう', 'せん'], explanation: 'To wash. Ex: 洗う (arau - to wash), 洗濯 (sentaku - laundry).' },
+                { kanji: '海', meaning: ['sea', 'ocean'], reading: ['うみ', 'かい'], explanation: 'Sea or ocean. Ex: 海 (umi - sea), 海外 (kaigai - overseas).' },
+                { kanji: '漢', meaning: ['china', 'han'], reading: ['かん'], explanation: 'Related to China or the Han people. Ex: 漢字 (kanji), 漢方薬 (kanpōyaku - herbal medicine).' },
+                { kanji: '牛', meaning: ['cow', 'bull'], reading: ['うし', 'ぎゅう'], explanation: 'Cow or cattle. Ex: 牛肉 (gyūniku - beef), 牛乳 (gyūnyū - milk).' },
+                { kanji: '物', meaning: ['thing', 'object'], reading: ['もの', 'ぶつ', 'もつ'], explanation: 'A physical object. Ex: 物 (mono - thing), 買い物 (kaimono - shopping).' },
+                { kanji: '特', meaning: ['special'], reading: ['とく'], explanation: 'Special. Ex: 特別 (tokubetsu - special).' },
+                { kanji: '犬', meaning: ['dog'], reading: ['いぬ', 'けん'], explanation: 'Dog. Ex: 犬 (inu - dog).' },
+                { kanji: '理', meaning: ['reason', 'logic'], reading: ['り'], explanation: 'Reason or logic. Ex: 理由 (riyū - reason), 地理 (chiri - geography).' },
+                { kanji: '産', meaning: ['give birth', 'produce'], reading: ['うむ', 'さん'], explanation: 'To give birth or produce. Ex: 生産 (seisan - production), 産業 (sangyō - industry).' },
+                { kanji: '用', meaning: ['use', 'business'], reading: ['もちいる', 'よう'], explanation: 'To use or a task/business. Ex: 用事 (yōji - errand/business), 使用 (shiyō - use).' },
+                { kanji: '田', meaning: ['rice field'], reading: ['た', 'でん'], explanation: 'A rice paddy. Ex: 田んぼ (tanbo - rice field).' },
+                { kanji: '町', meaning: ['town'], reading: ['まち', 'ちょう'], explanation: 'A town. Ex: 町 (machi - town).' },
+                { kanji: '画', meaning: ['picture'], reading: ['が', 'かく'], explanation: 'A picture. Ex: 映画 (eiga - movie), 計画 (keikaku - plan).' },
+                { kanji: '界', meaning: ['world'], reading: ['かい'], explanation: 'World or boundary. Ex: 世界 (sekai - world).' },
+                { kanji: '病', meaning: ['sick', 'ill'], reading: ['びょう', 'やまい'], explanation: 'Related to illness. Ex: 病気 (byōki - illness), 病院 (byōin - hospital).' },
+                { kanji: '発', meaning: ['depart', 'start'], reading: ['はつ', 'ほつ'], explanation: 'Departure or to emit. Ex: 出発 (shuppatsu - departure), 発見 (hakken - discovery).' },
+                { kanji: '県', meaning: ['prefecture'], reading: ['けん'], explanation: 'An administrative prefecture in Japan. Ex: 県庁 (kenchō - prefectural office).' },
+                { kanji: '真', meaning: ['true', 'reality'], reading: ['ま', 'しん'], explanation: 'True or real. Ex: 本当 (hontō - really/true), 真ん中 (mannaka - center).' },
+                { kanji: '着', meaning: ['arrive', 'wear'], reading: ['つく', 'きる', 'ちゃく'], explanation: 'Dual meaning: to wear clothes or to arrive somewhere. Ex: 着る (kiru - to wear), 着く (tsuku - to arrive).' },
+                { kanji: '知', meaning: ['know'], reading: ['しる', 'ち'], explanation: 'To know. Ex: 知る (shiru - to know), 知らせる (shiraseru - to inform).' },
+                { kanji: '短', meaning: ['short'], reading: ['みじかい', 'たん'], explanation: 'Short in length. Ex: 短い (mijikai - short).' },
+                { kanji: '研', meaning: ['research', 'sharpen'], reading: ['けん', 'とぐ'], explanation: 'To sharpen or to research. Ex: 研究 (kenkyū - research), 研ぐ (togu - to sharpen).' },
+                { kanji: '私', meaning: ['i', 'me', 'private'], reading: ['わたし', 'わたくし', 'し'], explanation: 'The most common way to say "I" or "me". Ex: 私の (watashi no - my).' },
+                { kanji: '秋', meaning: ['autumn'], reading: ['あき', 'しゅう'], explanation: 'The season of autumn. Ex: 秋 (aki - autumn).' },
+                { kanji: '究', meaning: ['research', 'study'], reading: ['きゅう', 'きわめる'], explanation: 'To investigate thoroughly. Often paired with 研. Ex: 研究室 (kenkyūshitsu - laboratory).' },
+                { kanji: '空', meaning: ['sky', 'empty'], reading: ['そら', 'から', 'くう'], explanation: 'Sky or empty. Ex: 空 (sora - sky), 空港 (kūkō - airport).' },
+                { kanji: '立', meaning: ['stand'], reading: ['たつ', 'りつ', 'たてる'], explanation: 'To stand up. Ex: 立つ (tatsu - to stand), 国立 (kokuritsu - national).' },
+                { kanji: '答', meaning: ['answer'], reading: ['こたえる', 'とう'], explanation: 'An answer or to answer. Ex: 答える (kotaeru - to answer), 答え (kotae - answer).' },
+                { kanji: '紙', meaning: ['paper'], reading: ['かみ', 'し'], explanation: 'Paper. Ex: 手紙 (tegami - letter), 紙 (kami - paper).' },
+                { kanji: '終', meaning: ['end', 'finish'], reading: ['おわる', 'しゅう'], explanation: 'To end or finish. Ex: 終わる (owaru - to end), 最終 (saishū - final).' },
+                { kanji: '習', meaning: ['learn'], reading: ['ならう', 'しゅう'], explanation: 'To learn. Ex: 習う (narau - to learn), 練習 (renshū - practice).' },
+                { kanji: '考', meaning: ['think'], reading: ['かんがえる', 'こう'], explanation: 'To think or consider. Ex: 考える (kangaeru - to think), 参考 (sankō - reference).' },
+                { kanji: '者', meaning: ['person'], reading: ['もの', 'しゃ'], explanation: 'A person (often in a certain role). Ex: 若者 (wakamono - young person), 医者 (isha - doctor).' },
+                { kanji: '肉', meaning: ['meat', 'flesh'], reading: ['にく'], explanation: 'Refers to meat. Ex: 牛肉 (gyūniku - beef), 筋肉 (kinniku - muscle).' },
+                { kanji: '自', meaning: ['oneself', 'self'], reading: ['みずから', 'じ', 'し'], explanation: 'Oneself. Ex: 自分 (jibun - oneself), 自転車 (jitensha - bicycle).' },
+                { kanji: '色', meaning: ['color'], reading: ['いろ', 'しょく', 'しき'], explanation: 'Color. Ex: 色 (iro - color), 色々 (iroiro - various).' },
+                { kanji: '英', meaning: ['england', 'english'], reading: ['えい'], explanation: 'Related to England or English. Ex: 英語 (Eigo - English language), 英雄 (eiyū - hero).' },
+                { kanji: '茶', meaning: ['tea'], reading: ['ちゃ', 'さ'], explanation: 'Tea. Ex: お茶 (ocha - tea), 茶色 (chairo - brown).' },
+                { kanji: '菜', meaning: ['vegetable'], reading: ['さい', 'な'], explanation: 'Vegetable. Ex: 野菜 (yasai - vegetable).' },
+                { kanji: '薬', meaning: ['medicine'], reading: ['くすり', 'やく'], explanation: 'Medicine or drugs. Ex: 薬 (kusuri - medicine), 薬局 (yakkyoku - pharmacy).' },
+                { kanji: '親', meaning: ['parent', 'intimate'], reading: ['おや', 'しん', 'したしい'], explanation: 'Parent or close/intimate. Ex: 親 (oya - parent), 親切 (shinsetsu - kind).' },
+                { kanji: '計', meaning: ['plan', 'measure'], reading: ['はかる', 'けい'], explanation: 'To measure or plan. Ex: 時計 (tokei - clock/watch), 計画 (keikaku - plan).' },
+                { kanji: '試', meaning: ['test', 'try'], reading: ['ためす', 'し'], explanation: 'To try or a test. Ex: 試す (tamesu - to try), 試験 (shiken - exam).' },
+                { kanji: '説', meaning: ['explain'], reading: ['せつ', 'とく'], explanation: 'To explain. Ex: 説明 (setsumei - explanation), 小説 (shōsetsu - novel).' },
+                { kanji: '貸', meaning: ['lend', 'loan'], reading: ['かす', 'たい'], explanation: 'To lend something to someone. Ex: 貸す (kasu - to lend).' },
+                { kanji: '質', meaning: ['quality', 'question'], reading: ['しつ', 'しち'], explanation: 'Quality or substance; also question. Ex: 質問 (shitsumon - question).' },
+                { kanji: '赤', meaning: ['red'], reading: ['あか', 'せき', 'しゃく'], explanation: 'The color red. Ex: 赤い (akai - red), 赤ちゃん (akachan - baby).' },
+                { kanji: '走', meaning: ['run'], reading: ['はしる', 'そう'], explanation: 'To run. Ex: 走る (hashiru - to run).' },
+                { kanji: '起', meaning: ['wake up', 'rise'], reading: ['おきる', 'き'], explanation: 'To get up or to happen. Ex: 起きる (okiru - to get up), 起こす (okosu - to wake someone up).' },
+                { kanji: '転', meaning: ['revolve', 'turn'], reading: ['ころがる', 'てん'], explanation: 'To turn, roll, or move. Ex: 自転車 (jitensha - bicycle), 運転 (unten - driving).' },
+                { kanji: '軽', meaning: ['lightweight'], reading: ['かるい', 'けい'], explanation: 'Light, not heavy. Ex: 軽い (karui - light).' },
+                { kanji: '近', meaning: ['near', 'close'], reading: ['ちかい', 'きん'], explanation: 'Near or close in proximity. Ex: 近い (chikai - near), 近所 (kinjo - neighborhood).' },
+                { kanji: '送', meaning: ['send'], reading: ['おくる', 'そう'], explanation: 'To send. Ex: 送る (okuru - to send), 送料 (sōryō - shipping fee).' },
+                { kanji: '通', meaning: ['pass through', 'commute'], reading: ['とおる', 'つう', 'かよう'], explanation: 'To pass through. Ex: 通る (tōru - to pass), 普通 (futsū - normal/usual).' },
+                { kanji: '進', meaning: ['advance', 'proceed'], reading: ['すすむ', 'しん'], explanation: 'To advance or move forward. Ex: 進む (susumu - to advance).' },
+                { kanji: '運', meaning: ['carry', 'luck'], reading: ['はこぶ', 'うん'], explanation: 'To carry, or luck/fortune. Ex: 運ぶ (hakobu - to carry), 運転 (unten - driving).' },
+                { kanji: '遠', meaning: ['far', 'distant'], reading: ['とおい', 'えん'], explanation: 'Far or distant. Ex: 遠い (tōi - far).' },
+                { kanji: '都', meaning: ['capital', 'metropolis'], reading: ['みやこ', 'と', 'つ'], explanation: 'Capital city. Ex: 都合 (tsugō - convenience), 京都 (Kyōto).' },
+                { kanji: '重', meaning: ['heavy', 'important'], reading: ['おもい', 'かさねる', 'じゅう', 'ちょう'], explanation: 'Heavy or important. Ex: 重い (omoi - heavy), 大重 (daijū - very important).' },
+                { kanji: '野', meaning: ['field'], reading: ['の', 'や'], explanation: 'An open field. Ex: 野菜 (yasai - vegetable), 野球 (yakyū - baseball).' },
+                { kanji: '銀', meaning: ['silver'], reading: ['ぎん'], explanation: 'The precious metal silver. Ex: 銀行 (ginkō - bank), 銀色 (gin-iro - silver color).' },
+                { kanji: '門', meaning: ['gate'], reading: ['もん', 'かど'], explanation: 'A gate. Ex: 門 (mon - gate).' },
+                { kanji: '開', meaning: ['open'], reading: ['あく', 'ひらく', 'かい'], explanation: 'To open. Ex: 開ける (akeru - to open), 開く (aku - to be opened).' },
+                { kanji: '院', meaning: ['institution', 'hospital'], reading: ['いん'], explanation: 'A public building or institution. Ex: 病院 (byōin - hospital), 大学院 (daigakuin - graduate school).' },
+                { kanji: '集', meaning: ['gather'], reading: ['あつまる', 'しゅう'], explanation: 'To gather. Ex: 集まる (atsumaru - to gather), 集める (atsumeru - to collect).' },
+                { kanji: '青', meaning: ['blue'], reading: ['あお', 'せい'], explanation: 'The color blue. Ex: 青い (aoi - blue).' },
+                { kanji: '音', meaning: ['sound'], reading: ['おと', 'おん', 'ね'], explanation: 'Sound. Ex: 音 (oto - sound), 音楽 (ongaku - music).' },
+                { kanji: '頭', meaning: ['head'], reading: ['あたま', 'とう', 'ず'], explanation: 'The head. Ex: 頭 (atama - head), 頭痛 (zutsuu - headache).' },
+                { kanji: '題', meaning: ['topic', 'subject'], reading: ['だい'], explanation: 'A title or topic of discussion. Ex: 宿題 (shukudai - homework), 題名 (daimei - title).' },
+                { kanji: '顔', meaning: ['face'], reading: ['かお', 'がん'], explanation: 'The face. Ex: 顔 (kao - face), 洗顔 (sengan - face washing).' },
+                { kanji: '風', meaning: ['wind', 'style'], reading: ['かぜ', 'ふう'], explanation: 'Wind or style/manner. Ex: 風 (kaze - wind), 風呂 (furo - bath).' },
+                { kanji: '飯', meaning: ['rice', 'meal'], reading: ['めし', 'はん'], explanation: 'Cooked rice or a meal. Ex: ご飯 (gohan - rice/meal), 朝ご飯 (asagohan - breakfast).' },
+                { kanji: '館', meaning: ['building', 'hall'], reading: ['やかた', 'かん'], explanation: 'A large building or hall. Ex: 図書館 (toshokan - library), 映画館 (eigakan - movie theater).' },
+                { kanji: '首', meaning: ['neck', 'head'], reading: ['くび', 'しゅ'], explanation: 'Neck. Ex: 首 (kubi - neck), 首都 (shuto - capital city).' },
+                { kanji: '験', meaning: ['test', 'examine'], reading: ['けん'], explanation: 'To test or examine. Ex: 試験 (shiken - exam), 経験 (keiken - experience).' },
+                { kanji: '鳥', meaning: ['bird'], reading: ['とり', 'ちょう'], explanation: 'Any kind of bird. Ex: 鳥 (tori - bird), 白鳥 (hakuchō - swan).' },
+                { kanji: '黒', meaning: ['black'], reading: ['くろ', 'こく'], explanation: 'The color black. Ex: 黒い (kuroi - black).' }
+            ];
+
+            // DOM Elements
+            const menuContainer = document.getElementById('menu-container');
+            const quizContainer = document.getElementById('quiz-container');
+            const kanjiListContainer = document.getElementById('kanji-list-container');
+            const homeButton = document.getElementById('home-button');
+            const roundDisplay = document.getElementById('round-display');
+            const header = document.getElementById('header');
+            const kanjiDisplay = document.getElementById('kanji-display');
+            const answerForm = document.getElementById('answer-form');
+            const answerInput = document.getElementById('answer-input');
+            const questionPrompt = document.getElementById('question-prompt');
+            const feedbackSection = document.getElementById('feedback-section');
+            const feedbackTextEl = document.getElementById('feedback-text');
+            const correctAnswerEl = document.getElementById('correct-answer');
+            const explanationBox = document.getElementById('explanation-box');
+            const explanationTitle = document.getElementById('explanation-title');
+            const explanationText = document.getElementById('explanation-text');
+            const nextButton = document.getElementById('next-button');
+            const progressBar = document.getElementById('progress-bar');
+            const finalScoreContainer = document.getElementById('final-score-container');
+            const finalTitle = document.getElementById('final-title');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const scoreSummaryDisplay = document.getElementById('score-summary');
+            const passFailMessage = document.getElementById('pass-fail-message');
+            const nextRoundButton = document.getElementById('next-round-button');
+            const retryRoundButton = document.getElementById('retry-round-button');
+            const mainMenuButton = document.getElementById('main-menu-button');
+            const viewKanjiListBtn = document.getElementById('view-kanji-list-btn');
+            const backToMenuFromListBtn = document.getElementById('back-to-menu-from-list');
+            const kanjiSearchInput = document.getElementById('kanji-search-input');
+            const kanjiTableBody = document.getElementById('kanji-table-body');
+
+            // State variables
+            let dataForQuiz = [];
+            let itemsForCurrentRound = [];
+            let lastRoundItems = [];
+            let usedItemPointer = 0;
+            let currentItemIndex = 0;
+            let currentRound = 1;
+            let quizMode = 'meaning';
+            let correctCount = 0;
+            const ITEMS_PER_ROUND = 15;
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            function initialize() {
+                showMenu();
+            }
+
+            function showMenu() {
+                menuContainer.classList.remove('hidden');
+                quizContainer.classList.add('hidden');
+                kanjiListContainer.classList.add('hidden');
+                finalScoreContainer.classList.add('hidden');
+                currentRound = 1;
+                usedItemPointer = 0;
+                lastRoundItems = [];
+            }
+            
+            function generateRoundItems() {
+                const REVIEW_COUNT = 5;
+                let newItems = [];
+                let reviewItems = [];
+                
+                if (currentRound > 1 && lastRoundItems.length > 0) {
+                     shuffleArray(lastRoundItems);
+                     reviewItems = lastRoundItems.slice(0, Math.min(REVIEW_COUNT, lastRoundItems.length));
+                }
+                
+                const newItemsNeeded = ITEMS_PER_ROUND - reviewItems.length;
+                for(let i = 0; i < newItemsNeeded; i++) {
+                    if(usedItemPointer >= dataForQuiz.length) {
+                        usedItemPointer = 0; 
+                    }
+                    const newItem = dataForQuiz[usedItemPointer];
+                    
+                    if (![...newItems, ...reviewItems].some(item => item.kanji === newItem.kanji)) {
+                        newItems.push(newItem);
+                    } else {
+                        i--;
+                    }
+                    usedItemPointer++;
+                }
+                
+                itemsForCurrentRound = [...newItems, ...reviewItems];
+                shuffleArray(itemsForCurrentRound);
+                lastRoundItems = [...itemsForCurrentRound];
+            }
+
+            function startQuiz(mode) {
+                quizMode = mode;
+                dataForQuiz = [...n4Kanji];
+                shuffleArray(dataForQuiz);
+                
+                if(currentRound === 1) usedItemPointer = 0;
+                
+                generateRoundItems();
+                menuContainer.classList.add('hidden');
+                quizContainer.classList.remove('hidden');
+                finalScoreContainer.classList.add('hidden');
+                currentItemIndex = 0;
+                correctCount = 0;
+                
+                setupQuizUIForMode();
+                displayQuestion();
+            }
+
+            function setupQuizUIForMode() {
+                const uiConfig = {
+                    meaning: { color: 'bg-pink-600', prompt: 'Meaning' },
+                    reading: { color: 'bg-purple-600', prompt: 'Reading' }
+                };
+
+                const config = uiConfig[quizMode];
+                header.className = `${config.color} text-white text-center p-6 rounded-t-lg transition-all`;
+                questionPrompt.textContent = config.prompt;
+            }
+            
+            function displayQuestion() {
+                answerInput.value = '';
+                answerInput.disabled = false;
+                feedbackSection.classList.add('hidden');
+                explanationBox.classList.add('hidden');
+                
+                roundDisplay.textContent = `Round ${currentRound}`;
+                const currentItem = itemsForCurrentRound[currentItemIndex];
+                
+                kanjiDisplay.textContent = currentItem.kanji;
+                answerInput.focus();
+                
+                updateProgressBar();
+            }
+            
+            function checkAnswer(event) {
+                event.preventDefault();
+                const userAnswer = answerInput.value.trim().toLowerCase();
+                if (!userAnswer) return;
+
+                const currentItem = itemsForCurrentRound[currentItemIndex];
+                const correctAnswers = quizMode === 'meaning' ? currentItem.meaning : currentItem.reading;
+                const isCorrect = correctAnswers.includes(userAnswer);
+
+                showFeedback(isCorrect, currentItem, correctAnswers.join(', '));
+            }
+            
+            function showFeedback(isCorrect, item, correctAnswerText) {
+                feedbackSection.classList.remove('hidden');
+                answerInput.disabled = true;
+
+                if (isCorrect) {
+                    correctCount++;
+                    feedbackTextEl.textContent = 'Correct!';
+                    feedbackTextEl.className = 'text-2xl font-bold text-green-400';
+                    correctAnswerEl.textContent = '';
+                    answerInput.className = 'w-full p-4 bg-green-200 text-gray-900 text-2xl text-center rounded-lg border-2 border-green-500 focus:outline-none transition-all';
+                } else {
+                    feedbackTextEl.textContent = 'Incorrect';
+                    feedbackTextEl.className = 'text-2xl font-bold text-red-400';
+                    correctAnswerEl.textContent = `Correct answer: ${correctAnswerText}`;
+                    answerInput.className = 'w-full p-4 bg-red-200 text-gray-900 text-2xl text-center rounded-lg border-2 border-red-500 focus:outline-none transition-all shake';
+                }
+
+                if(item.explanation) {
+                    explanationTitle.textContent = 'Explanation';
+                    explanationText.innerHTML = item.explanation;
+                    explanationBox.classList.remove('hidden');
+                }
+            }
+            
+            function handleNext() {
+                answerInput.className = 'w-full p-4 bg-gray-900 text-white text-2xl text-center rounded-lg border-2 border-transparent focus:border-blue-500 focus:outline-none transition-all';
+                
+                currentItemIndex++;
+                if (currentItemIndex < itemsForCurrentRound.length) {
+                    displayQuestion();
+                } else {
+                    showRoundEndScreen();
+                }
+            }
+            
+            function updateProgressBar() {
+                const progressPercentage = ((currentItemIndex) / itemsForCurrentRound.length) * 100;
+                progressBar.style.width = `${progressPercentage}%`;
+            }
+            
+            function showRoundEndScreen() {
+                quizContainer.classList.add('hidden');
+                finalScoreContainer.classList.remove('hidden');
+                
+                const score = (correctCount / itemsForCurrentRound.length) * 100;
+                const roundedScore = Math.round(score);
+                
+                finalScoreDisplay.textContent = `${roundedScore}%`;
+                scoreSummaryDisplay.textContent = `You got ${correctCount} out of ${itemsForCurrentRound.length} correct.`;
+
+                nextRoundButton.classList.add('hidden');
+                retryRoundButton.classList.add('hidden');
+
+                const passingScore = 70;
+
+                if (roundedScore >= passingScore) {
+                    finalTitle.textContent = 'Round Complete!';
+                    finalScoreDisplay.className = 'text-5xl font-bold text-green-400 mb-6';
+                    passFailMessage.textContent = "Great job! You're ready for the next round.";
+                    passFailMessage.className = 'text-lg mb-6 text-green-400';
+                    nextRoundButton.classList.remove('hidden');
+                } else {
+                    finalTitle.textContent = 'Study Harder!';
+                    finalScoreDisplay.className = 'text-5xl font-bold text-red-400 mb-6';
+                    passFailMessage.textContent = `You need a score of ${passingScore}% or higher to proceed. Please try this round again.`;
+                    passFailMessage.className = 'text-lg mb-6 text-yellow-400';
+                    retryRoundButton.classList.remove('hidden');
+                }
+                passFailMessage.classList.remove('hidden');
+            }
+            
+            function retryRound() {
+                startQuiz(quizMode); 
+            }
+
+            function handleNextRound() {
+                currentRound++;
+                startQuiz(quizMode);
+            }
+            
+            function populateKanjiTable(filter = '') {
+                kanjiTableBody.innerHTML = '';
+                const searchTerm = filter.toLowerCase();
+                
+                const filteredList = n4Kanji.filter(item => 
+                    item.kanji.includes(searchTerm) ||
+                    item.meaning.some(m => m.includes(searchTerm)) ||
+                    item.reading.some(r => r.includes(searchTerm))
+                );
+
+                filteredList.forEach(item => {
+                    const row = `
+                        <tr class="border-b border-gray-700">
+                            <td class="p-3 text-2xl">${item.kanji}</td>
+                            <td class="p-3">${item.reading.join(', ')}</td>
+                            <td class="p-3">${item.meaning.join(', ')}</td>
+                        </tr>
+                    `;
+                    kanjiTableBody.innerHTML += row;
+                });
+            }
+
+            function showKanjiList() {
+                menuContainer.classList.add('hidden');
+                quizContainer.classList.add('hidden');
+                kanjiListContainer.classList.remove('hidden');
+                populateKanjiTable();
+            }
+
+            // --- Event Listeners ---
+            menuContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.menu-btn');
+                if (button) {
+                    const mode = button.dataset.mode;
+                    if(mode) {
+                        currentRound = 1;
+                        startQuiz(mode);
+                    }
+                }
+            });
+            
+            viewKanjiListBtn.addEventListener('click', showKanjiList);
+            backToMenuFromListBtn.addEventListener('click', showMenu);
+            kanjiSearchInput.addEventListener('input', (e) => populateKanjiTable(e.target.value));
+
+            answerForm.addEventListener('submit', checkAnswer);
+            nextButton.addEventListener('click', handleNext);
+            homeButton.addEventListener('click', showMenu);
+            nextRoundButton.addEventListener('click', handleNextRound);
+            retryRoundButton.addEventListener('click', retryRound);
+            mainMenuButton.addEventListener('click', initialize);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !feedbackSection.classList.contains('hidden')) {
+                    e.preventDefault();
+                    handleNext();
+                }
+            });
+            
+            initialize();
+        });
+    </script>
+</body>
+</html>
